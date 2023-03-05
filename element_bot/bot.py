@@ -1,11 +1,7 @@
 import simplematrixbotlib as botlib
 import nio
 import os
-
-creds = botlib.Creds("http://localhost:8008", "bot", "password")
-bot = botlib.Bot(creds)
-asyn_bot = nio.AsyncClient("http://localhost:8008", "bot")
-dumproom = "!AktcLzVyjymxBQBetH:localhost"
+import fire
 
 @bot.listener.on_custom_event(nio.events.room_events.RoomMessageImage)
 async def on_image_message(room, event):
@@ -27,4 +23,9 @@ async def on_image_message(room, event):
             await bot.api.send_image_message(dumproom, fname)
             os.remove(fname)
 
-bot.run()
+def main(serveraddress="http://localhost:8008", botname, password, publicroom):
+    creds = botlib.Creds(serveraddress, botname, password)
+    bot = botlib.Bot(creds)
+    asyn_bot = nio.AsyncClient(serveraddress, botname)
+    dumproom = publicroom
+    bot.run()
