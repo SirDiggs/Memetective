@@ -3,11 +3,11 @@ import nio
 import os
 import fire
 
-def main(botname, password, serveraddress="http://localhost:8008"):
+def main(botname, password, postroom, serveraddress="http://localhost:8008"):
     creds = botlib.Creds(serveraddress, botname, password)
     bot = botlib.Bot(creds)
     asyn_bot = nio.AsyncClient(serveraddress, botname)
-    dumproom = "!AktcLzVyjymxBQBetH:localhost"
+    dumproom = postroom
 
     @bot.listener.on_custom_event(nio.events.room_events.RoomMessageImage)
     async def on_image_message(room, event):
