@@ -2,17 +2,18 @@ import simplematrixbotlib as botlib
 import nio
 import os
 import fire
+import sys
+import asyncio
 
 polls = {}
 
 def main(botname, password, postroom, serveraddress="http://localhost:8008"):
     creds = botlib.Creds(serveraddress, botname, password)
     bot = botlib.Bot(creds)
-    asyn_bot = nio.AsyncClient(serveraddress, botname)
-
+    async_bot = nio.AsyncClient(serveraddress, botname)
     @bot.listener.on_custom_event(nio.events.room_events.Event)
     async def on_poll_message(room, event):
-        response = await asyn_bot.login(password)
+        response = await async_bot.login(password)
         match = botlib.MessageMatch(room, event, bot)
         if match.is_not_from_this_bot() and room.is_group and room.member_count == 2:
             match event.source['type']:
@@ -37,12 +38,12 @@ def main(botname, password, postroom, serveraddress="http://localhost:8008"):
 
     @bot.listener.on_custom_event(nio.events.room_events.RoomMessageImage)
     async def on_image_message(room, event):
-        response = await asyn_bot.login(password)
+        response = await async_bot.login(password)
         match = botlib.MessageMatch(room, event, bot)
         if match.is_not_from_this_bot() and room.is_group and room.member_count == 2:
             url = event.url
             urllist = url.split("/")
-            response = await asyn_bot.download(urllist[2], urllist[3])
+            response = await async_bot.download(urllist[2], urllist[3])
             fname="./"+event.source['content']['body']
             with open(fname, 'wb') as binary_file:
                 binary_file.write(response.body)
@@ -68,11 +69,15 @@ def main(botname, password, postroom, serveraddress="http://localhost:8008"):
                                 {'id': 'TNjfj4jEoF6zjzRe', 'org.matrix.msc1767.text': 'testb'}]}
                 }
 
-                await asyn_bot.room_send(postroom, msg_type, pollContent, ignore_unverified_devices=False)
+                await async_bot.room_send(postroom, msg_type, pollContent, ignore_unverified_devices=False)
 
                 os.remove(fname)
-
-    bot.run()
+    try:
+        bot.run()
+    except KeyboardInterrupt:
+        print("Keyboard interrup detected. Exiting gracefully...")
+        asyncio.run(async_bot.close())
+        sys.exit(0)
 
 if __name__=="__main__":
     fire.Fire(main)
